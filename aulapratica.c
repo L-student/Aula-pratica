@@ -197,6 +197,74 @@ int main() {
 
 //06)
 
+// INICIALIZA TODOS OS VALORES DOS VETORES EM ZERO
+void zera_vetor(int *v1, int *v2, int i){
+	if(i<50){
+		v1[i] = v2[i] = 0;
+		zera_vetor(v1 , v2, i+1);
+	}
+	return;
+}
+
+// ARMAZENA OS QUOCIENTES ENCONTRADOS NO ALGORITMO DE EUCLIDES
+int euclides(int x, int y, int *v, int i){
+	if(x%y != 0){
+		i = euclides(y, x%y, v, i);
+		v[i] = x/y;
+		i++;
+	}
+	return i;
+}
+
+// CALCULA OS VALORES DA TABELA QUE CONTEM OS VALORES "s" E "t"
+// SENDO ELES OS FATORES MULTIPLICATIVOS DOS DOIS NUMEROS
+void calc_fatores(int *q, int *f, int i){
+	if(q[i] != 0){
+		f[i+2] = (q[i]*f[i+1]) + f[i];
+		calc_fatores(q, f, i+1);
+	}
+	return;
+}
+
+int main(){
+	int x, y, quocientes[50], fatores[50];
+
+	scanf("%d %d", &x, &y);
+
+	// CASO UM OU OS DOIS NUMEROS SEJAM ZERO, NÃO PODEMOS APLICAR EUCLIDES
+	// DESSA FORMA NÃO EXECUTAMOS AS FUNÇÕES, E PULAMOS DO "if" PARA O "else"
+	if(x!=0 && y!=0){
+		zera_vetor(&quocientes[0], &fatores[0], 0);
+		fatores[1] = 1;
+		euclides(x, y, &quocientes[0], 0);
+		calc_fatores(&quocientes[0], &fatores[0], 0);
+
+		// PERCORRE O VETOR ONDE ESTÃO OS FATORES E PRINTA OS DOIS ULTIMOS
+		// ESSES SÃO OS FATORES "s" E "t", E OS PRINTA NA ORDEM CORRETA
+		for (int i = 1;  ; ++i){
+			if(fatores[i] == 0 && x<y && fatores[i-2]*y > fatores[i-1]*x){
+				printf("%d*%d - %d*%d\n", fatores[i-2], y, fatores[i-1], x);
+				break;
+			}else if(fatores[i] == 0 && x<y && (fatores[i-2]*y < fatores[i-1]*x)){
+				printf("%d*%d - %d*%d\n", fatores[i-1], x, fatores[i-2], y);
+				break;
+			}else if(fatores[i] == 0 && x>y && (fatores[i-2]*x > fatores[i-1]*y)){
+				printf("%d*%d - %d*%d\n", fatores[i-2], x, fatores[i-1], y);
+				break;
+			}else if(fatores[i] == 0 && x>y && (fatores[i-2]*x < fatores[i-1]*y)){
+				printf("%d*%d - %d*%d\n", fatores[i-1], y, fatores[i-2], x);
+				break;
+			}
+		}
+	}
+	// A SEGUIR ESTÃO OS CASOS DE TESTE ESPECIAIS ONDE A ENTRADA PODE TER ZERO(S)
+	else if(x>y) printf("1*%d - 1*%d\n", x, y);
+	else if(y>x) printf("1*%d - 1*%d\n", y, x);
+	else printf("1*%d - 1*%d\n", x, y);
+
+	return 0;
+}
+
 
 //07)
 
@@ -206,6 +274,169 @@ int main() {
 
 //09)
 
+//ESTA FUNÇÃO FUNCION DE FORMA SIMILAR A QUESTÃO 10).
+// PARA INICIALIZAR ESSA, TAMBÉM É NECESSÁRIO COLOCAR O NÚMERO DE CONGRUÊNCIAS.
+//SABEMOS QUE NESSE EXEMPLO, É PEDIDO SOMENTE 3 ENTRADAS, PORÉM POR QUESTÕES DE EFICIÊNCIA, DECIDIMOS FAZER UMA GERAL PARA MAIS DE 3.
+int euclides2(int x, int y){
+	if(x%y == 1){
+		return 1;
+	}else if(x%y == 0){
+		return 0;
+	} else{
+		return euclides2(y, x%y );
+	}
+}
+
+int verifica_coprimos(int mods[], int qtdd_congruencias){
+	for (int i = 0; i < qtdd_congruencias-1; i++){
+		for (int j = i+1; j < qtdd_congruencias; j++){
+			if(!euclides2(mods[i] , mods[j])){
+				printf("Os modulos nao sao coprimos!\n");
+				return 0;
+			}
+		}
+	}
+	return 1;
+}
+
+int calcula_M(int mods[], int qtdd_congruencias){
+	int M=1;
+	for (int i = 0; i < qtdd_congruencias; i++){
+		M *= mods[i];
+	}
+	return M;
+}
+
+void calcula_Ms(int mods[], int Ms[], int M, int qtdd_congruencias){
+	for (int i = 0; i < qtdd_congruencias; i++){
+		Ms[i] = M/mods[i];
+	}
+}
+
+void encontra_solucoes(int Ms[], int mods[], int s[], int qtdd_congruencias){
+	for (int i = 0; i < qtdd_congruencias; i++){
+		for (int j = 1; ; j++){
+			if((Ms[i]*j)%mods[i] == 1){
+				s[i] = j;
+				break;
+			}
+		}
+	}
+}
+
+int calcula_x(int Ms[], int s[], int restos[], int qtdd_congruencias){
+	int x=0;
+	for (int i = 0; i < qtdd_congruencias ; i++){
+		x += Ms[i]*s[i]*restos[i];
+	}
+	return x;
+}
+
+int main(){
+	int restos[50], mods[50], M, Ms[50], s[50], x, solucao, qtdd_congruencias;
+
+	printf("Digite a quantidade de congruencias: ");
+	scanf("%d", &qtdd_congruencias);
+
+	for(int i = 0; i<qtdd_congruencias ; i++){
+		scanf("%d %d", &restos[i], &mods[i]);
+	}
+
+	if(!verifica_coprimos(mods, qtdd_congruencias)){
+		return 0;
+	}
+
+	M = calcula_M(mods, qtdd_congruencias);
+	calcula_Ms(mods, Ms, M, qtdd_congruencias);
+	encontra_solucoes(Ms, mods, s, qtdd_congruencias);
+	x = calcula_x(Ms, s, restos, qtdd_congruencias);
+	solucao = x%M;
+
+	printf("A solucao eh: %d!\n", solucao);
+
+	return 0;
+}
+
 
 //10)
 
+
+int euclides2(int x, int y){
+	if(x%y == 1){
+		return 1;
+	}else if(x%y == 0){
+		return 0;
+	} else{
+		return euclides2(y , x%y);
+	}
+}
+
+int verifica_coprimos(int mods[], int qtdd_congruencias){
+	for (int i = 0; i < qtdd_congruencias-1; i++){
+		for (int j = i+1; j < qtdd_congruencias; j++){
+			if(!euclides2(mods[i] , mods[j])){
+				printf("Os modulos nao sao coprimos!\n");
+				return 0;
+			}
+		}
+	}
+	return 1;
+}
+
+int calcula_M(int mods[], int qtdd_congruencias){
+	int M=1;
+	for (int i = 0; i < qtdd_congruencias; i++){
+		M *= mods[i];
+	}
+	return M;
+}
+
+void calcula_Ms(int mods[], int Ms[], int M, int qtdd_congruencias){
+	for (int i = 0; i < qtdd_congruencias; i++){
+		Ms[i] = M/mods[i];
+	}
+}
+
+void encontra_solucoes(int Ms[], int mods[], int s[], int qtdd_congruencias){
+	for (int i = 0; i < qtdd_congruencias; i++){
+		for (int j = 1; ; j++){
+			if((Ms[i]*j)%mods[i] == 1){
+				s[i] = j;
+				break;
+			}
+		}
+	}
+}
+
+int calcula_x(int Ms[], int s[], int restos[], int qtdd_congruencias){
+	int x=0;
+	for (int i = 0; i < qtdd_congruencias ; i++){
+		x += Ms[i]*s[i]*restos[i];
+	}
+	return x;
+}
+
+int main(){
+	int restos[50], mods[50], M, Ms[50], s[50], x, solucao, qtdd_congruencias;
+
+	printf("Digite a quantidade de congruencias: ");
+	scanf("%d", &qtdd_congruencias);
+
+	for(int i = 0; i<qtdd_congruencias ; i++){
+		scanf("%d %d", &restos[i], &mods[i]);
+	}
+
+	if(!verifica_coprimos(mods, qtdd_congruencias)){
+		return 0;
+	}
+
+	M = calcula_M(mods, qtdd_congruencias);
+	calcula_Ms(mods, Ms, M, qtdd_congruencias);
+	encontra_solucoes(Ms, mods, s, qtdd_congruencias);
+	x = calcula_x(Ms, s, restos, qtdd_congruencias);
+	solucao = x%M;
+
+	printf("A solucao eh: %d!\n", solucao);
+
+	return 0;
+}
